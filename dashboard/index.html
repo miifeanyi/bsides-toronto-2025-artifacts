@@ -1,1 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Security Operations Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e1a;
+            color: #e1e5e9;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            width: 100vw;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 15px;
+            min-height: 100vh;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .header {
+            height: 60px;
+            background: linear-gradient(135deg, #1e3a8a, #3730a3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .top-row {
+            display: flex;
+            gap: 15px;
+            height: 180px;
+            flex-shrink: 0;
+        }
+
+        .middle-row {
+            display: flex;
+            gap: 15px;
+            height: 300px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .bottom-row {
+            display: flex;
+            gap: 15px;
+            height: 300px;
+            flex-shrink: 0;
+        }
+
+        .panel {
+            background: linear-gradient(135deg, #1f2937, #374151);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid #4b5563;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #60a5fa;
+            flex-shrink: 0;
+        }
+
+        .metrics-panel {
+            flex: 1;
+        }
+
+        .threats-panel {
+            flex: 1;
+        }
+
+        .network-panel {
+            flex: 1;
+        }
+
+        .email-analysis {
+            flex: 1;
+        }
+
+        .escalation-panel {
+            flex: 1;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            flex: 1;
+            align-content: start;
+            overflow-y: auto;
+            max-height: 130px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 6px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 2px;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        .threat-feed {
+            max-height: 100px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .threat-item {
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            font-size: 11px;
+            border-left: 4px solid;
+            animation: slideIn 0.5s ease-out;
+            line-height: 1.3;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .threat-high {
+            background: rgba(239, 68, 68, 0.2);
+            border-left-color: #ef4444;
+        }
+
+        .threat-medium {
+            background: rgba(245, 158, 11, 0.2);
+            border-left-color: #f59e0b;
+        }
+
+        .threat-low {
+            background: rgba(34, 197, 94, 0.2);
+            border-left-color: #22c55e;
+        }
+
+        .email-queue {
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .escalation-queue {
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .email-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(55, 65, 81, 0.5);
+            border-radius: 4px;
+            border-left: 4px solid;
+            font-size: 12px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .email-safe {
+            border-left-color: #22c55e;
+        }
+
+        .email-suspicious {
+            border-left-color: #f59e0b;
+        }
+
+        .email-malicious {
+            border-left-color: #ef4444;
+        }
+
+        .confidence-score {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .confidence-high {
+            background: #dc2626;
+            color: white;
+        }
+
+        .confidence-medium {
+            background: #d97706;
+            color: white;
+        }
+
+        .confidence-low {
+            background: #059669;
+            color: white;
+        }
+
+        .network-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .network-stat {
+            text-align: center;
+            padding: 6px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 4px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            min-height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .escalation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 4px;
+            border-left: 4px solid #ef4444;
+            min-height: 60px;
+        }
+
+        .escalation-reason {
+            font-size: 11px;
+            color: #fca5a5;
+            margin-top: 4px;
+        }
+
+        .time-stamp {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #374151;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 6px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 4px;
+            transition: width 2s ease-in-out;
+        }
+
+        .ai-reasoning {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+            padding: 6px;
+            margin-top: 6px;
+            font-size: 9px;
+            color: #c7d2fe;
+            line-height: 1.3;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .top-row {
+                flex-wrap: wrap;
+                height: auto;
+            }
+            
+            .top-row .panel {
+                min-width: 300px;
+                flex: 1 1 calc(50% - 10px);
+                height: 180px;
+            }
+            
+            .middle-row {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .middle-row .panel {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 10px;
+                gap: 10px;
+            }
+            
+            .top-row {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .top-row .panel {
+                width: 100%;
+                height: 150px;
+                min-width: unset;
+            }
+            
+            .middle-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .middle-row .panel {
+                height: 250px;
+            }
+            
+            .header h1 {
+                font-size: 18px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #374151;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <h1>AI Security Operations Center</h1>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span>AI Engine Active</span>
+                <span id="currentTime"></span>
+            </div>
+        </header>
+
+        <div class="top-row">
+            <div class="panel metrics-panel">
+                <h3 class="panel-title">Real-Time Metrics</h3>
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-value" id="threatsProcessed">847</div>
+                        <div class="metric-label">Threats Processed</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="accuracy">94.7%</div>
+                        <div class="metric-label">Accuracy Rate</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="responseTime">2.3s</div>
+                        <div class="metric-label">Avg Response</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="timeSaved">5.2h</div>
+                        <div class="metric-label">Time Saved Today</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel threats-panel">
+                <h3 class="panel-title">Live Threat Detection</h3>
+                <div class="threat-feed" id="threatFeed"></div>
+            </div>
+
+            <div class="panel network-panel">
+                <h3 class="panel-title">Network Behavior Analysis</h3>
+                <div class="network-stats">
+                    <div class="network-stat">
+                        <div class="metric-value" id="blockedIPs">347</div>
+                        <div class="metric-label">IPs Blocked</div>
+                    </div>
+                    <div class="network-stat">
+                        <div class="metric-value" id="credentialAttempts">23</div>
+                        <div class="metric-label">Source IPs</div>
+                    </div>
+                </div>
+                <div>
+                    <strong>AI Pattern Recognition:</strong>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="patternProgress" style="width: 87%"></div>
+                    </div>
+                    <div class="ai-reasoning">
+                        Detecting coordinated credential stuffing campaign across multiple endpoints. 
+                        Behavioral signatures match known APT29 tactics. Auto-blocking in progress.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="middle-row">
+            <div class="panel email-analysis">
+                <h3 class="panel-title">AI Email Analysis Queue</h3>
+                <div class="email-queue" id="emailQueue"></div>
+            </div>
+
+            <div class="panel escalation-panel">
+                <h3 class="panel-title">Human Escalation Queue (12 items)</h3>
+                <div class="escalation-queue" id="escalationQueue"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AISecurityDashboard {
+            constructor() {
+                this.threatCount = 847;
+                this.accuracy = 94.7;
+                this.responseTime = 2.3;
+                this.timeSaved = 5.2;
+                this.blockedIPs = 347;
+                this.sourceIPs = 23;
+                
+                this.emailSenders = [
+                    'marketing@techcorp.com', 'alerts@bankingsec.net', 'noreply@socialmed.io',
+                    'admin@suspicious-domain.tk', 'it-support@companyname.com', 'security@legitbank.com',
+                    'phishing@obvious-scam.ru', 'updates@software-vendor.com'
+                ];
+                
+                this.threatTypes = [
+                    'Credential stuffing detected', 'Phishing email blocked', 'Malware signature found',
+                    'Lateral movement prevented', 'Data exfiltration attempt', 'Suspicious API calls',
+                    'Anomalous login behavior', 'C2 communication blocked'
+                ];
+                
+                this.escalationReasons = [
+                    'Novel attack pattern detected', 'Potential insider threat', 'Zero-day exploit suspected',
+                    'Advanced persistent threat indicators', 'Multi-vector attack campaign', 'Critical asset targeted'
+                ];
+                
+                this.init();
+            }
+            
+            init() {
+                this.updateClock();
+                this.populateInitialData();
+                this.startRealTimeUpdates();
+                setInterval(() => this.updateClock(), 1000);
+            }
+            
+            updateClock() {
+                const now = new Date();
+                document.getElementById('currentTime').textContent = now.toLocaleTimeString();
+            }
+            
+            populateInitialData() {
+                for (let i = 0; i < 8; i++) {
+                    this.addThreatItem();
+                }
+                
+                for (let i = 0; i < 6; i++) {
+                    this.addEmailItem();
+                }
+                
+                for (let i = 0; i < 12; i++) {
+                    this.addEscalationItem();
+                }
+            }
+            
+            startRealTimeUpdates() {
+                setInterval(() => this.updateMetrics(), 3000);
+                setInterval(() => this.addThreatItem(), Math.random() * 3000 + 2000);
+                setInterval(() => this.addEmailItem(), Math.random() * 2000 + 1000);
+                setInterval(() => this.updateNetworkStats(), 5000);
+                setInterval(() => this.addEscalationItem(), Math.random() * 4000 + 8000);
+            }
+            
+            updateMetrics() {
+                this.threatCount += Math.floor(Math.random() * 5) + 1;
+                this.accuracy = Math.max(90, Math.min(99.9, this.accuracy + (Math.random() - 0.5) * 0.5));
+                this.responseTime = Math.max(1.0, Math.min(5.0, this.responseTime + (Math.random() - 0.5) * 0.3));
+                this.timeSaved = Math.max(0, this.timeSaved + Math.random() * 0.1);
+                
+                document.getElementById('threatsProcessed').textContent = this.threatCount;
+                document.getElementById('accuracy').textContent = this.accuracy.toFixed(1) + '%';
+                document.getElementById('responseTime').textContent = this.responseTime.toFixed(1) + 's';
+                document.getElementById('timeSaved').textContent = this.timeSaved.toFixed(1) + 'h';
+            }
+            
+            addThreatItem() {
+                const threatFeed = document.getElementById('threatFeed');
+                const threat = document.createElement('div');
+                const severity = Math.random();
+                const severityClass = severity > 0.7 ? 'threat-high' : severity > 0.4 ? 'threat-medium' : 'threat-low';
+                const severityText = severity > 0.7 ? 'HIGH' : severity > 0.4 ? 'MEDIUM' : 'LOW';
+                
+                threat.className = `threat-item ${severityClass}`;
+                threat.innerHTML = `
+                    <div>
+                        <strong>[${severityText}]</strong> ${this.threatTypes[Math.floor(Math.random() * this.threatTypes.length)]}
+                        <br><small>${new Date().toLocaleTimeString()} - Source: ${this.randomIP()}</small>
+                    </div>
+                `;
+                
+                threatFeed.insertBefore(threat, threatFeed.firstChild);
+                
+                while (threatFeed.children.length > 10) {
+                    threatFeed.removeChild(threatFeed.lastChild);
+                }
+            }
+            
+            addEmailItem() {
+                const emailQueue = document.getElementById('emailQueue');
+                const email = document.createElement('div');
+                const risk = Math.random();
+                const riskClass = risk > 0.8 ? 'email-malicious' : risk > 0.6 ? 'email-suspicious' : 'email-safe';
+                const confidence = risk > 0.8 ? 'confidence-high' : risk > 0.6 ? 'confidence-medium' : 'confidence-low';
+                const confidenceText = risk > 0.8 ? 'MALICIOUS' : risk > 0.6 ? 'SUSPICIOUS' : 'SAFE';
+                const confidenceScore = risk > 0.8 ? (90 + Math.random() * 10).toFixed(1) : 
+                                       risk > 0.6 ? (70 + Math.random() * 20).toFixed(1) : 
+                                       (Math.random() * 30).toFixed(1);
+                
+                email.className = `email-item ${riskClass}`;
+                email.innerHTML = `
+                    <div>
+                        <div><strong>From:</strong> ${this.emailSenders[Math.floor(Math.random() * this.emailSenders.length)]}</div>
+                        <div style="font-size: 10px; color: #9ca3af;">
+                            ${risk > 0.6 ? 'AI detected: Suspicious language patterns + sender reputation anomaly' : 'Standard business communication detected'}
+                        </div>
+                    </div>
+                    <div class="confidence-score ${confidence}">
+                        ${confidenceText} ${confidenceScore}%
+                    </div>
+                `;
+                
+                emailQueue.insertBefore(email, emailQueue.firstChild);
+                
+                while (emailQueue.children.length > 8) {
+                    emailQueue.removeChild(emailQueue.lastChild);
+                }
+            }
+            
+            addEscalationItem() {
+                const escalationQueue = document.getElementById('escalationQueue');
+                const escalation = document.createElement('div');
+                
+                escalation.className = 'escalation-item';
+                escalation.innerHTML = `
+                    <div>
+                        <div><strong>Critical Review Required</strong></div>
+                        <div class="escalation-reason">
+                            AI Reasoning: ${this.escalationReasons[Math.floor(Math.random() * this.escalationReasons.length)]}
+                        </div>
+                    </div>
+                    <div class="time-stamp">${new Date().toLocaleTimeString()}</div>
+                `;
+                
+                escalationQueue.appendChild(escalation);
+                
+                while (escalationQueue.children.length > 15) {
+                    escalationQueue.removeChild(escalationQueue.firstChild);
+                }
+            }
+            
+            updateNetworkStats() {
+                this.blockedIPs += Math.floor(Math.random() * 10) + 1;
+                this.sourceIPs += Math.floor(Math.random() * 3);
+                
+                document.getElementById('blockedIPs').textContent = this.blockedIPs;
+                document.getElementById('credentialAttempts').textContent = this.sourceIPs;
+                
+                const progress = Math.min(100, Math.random() * 20 + 80);
+                document.getElementById('patternProgress').style.width = progress + '%';
+            }
+            
+            randomIP() {
+                return `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            new AISecurityDashboard();
+        });
+    </script>
+</body>
+</html>
