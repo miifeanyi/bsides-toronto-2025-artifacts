@@ -28,7 +28,7 @@ bsides-toronto-2025-ai-security/
 
 ## Live Dashboard Demo
 
-🔗 **[View Live Dashboard](https://miifeanyi.github.io/bsides-toronto-2025-ai-security/dashboard/index.html)**
+🔗 **[View Live Dashboard](https://github.com/miifeanyi/bsides-toronto-2025-artifacts/blob/main/dashboard/index.html)**
 
 The dashboard demonstrates:
 - **Real-time threat detection** visualization with confidence scoring
@@ -101,15 +101,15 @@ python -m http.server 8000
 
 ## About the Speaker
 
-**[Michael Ifeanyi]**  
-Technical Solutions Engineer, Google Cloud
+**Michael Ifeanyi**  
+Technical Solutions Engineer, Google
 
 I support enterprise customers with Kubernetes networking and security. This was my first conference talk, combining two months of research into AI security with hands-on experimentation to answer: Can AI actually defend against AI-powered attacks?
 
 **Connect:**
 - 🔗 [LinkedIn](https://www.linkedin.com/in/mifeanyi/)
-- 🌐 [Website](your-website-url)
-- 📧 [Email](your-email)
+- 🌐 [Website](www.michaelifeanyi.com)
+- 📧 [Email](michael@michaelifeanyi.com)
 
 ---
 
